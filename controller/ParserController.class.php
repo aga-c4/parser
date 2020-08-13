@@ -101,8 +101,7 @@ in html mode /out/nag/?from=test для забора файла
 
         $help_txt = 'OUT!';
 
-        //if ($tpl_mode=='html'){$help_txt = "<pre>$help_txt</pre>";}
-        if ($tpl_mode=='html'){$help_txt = "Hello MOTO!";}
+        if ($tpl_mode=='html'){$help_txt = "Hello!";}
 
         //Установим глобальные метатеги для данной страницы
         Glob::$vars['page_title'] = 'Help'; //Метатег title
