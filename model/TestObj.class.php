@@ -6,7 +6,7 @@
  * Time: 11:59
  */
 
-class NagObj {
+class TestObj {
 
     public $data = array();
     

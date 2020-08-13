@@ -51,18 +51,18 @@ parser - default controller
 
 Actions:
 help - read Help Information
-nagparser - start Nag parsing (only from console)
+parser - start parsing (only from console)
 
 tpl_mode:
 html - to view result as html file
 txt  - to view result as txt file
 json - to view result in json format
 
-in html mode /out/nag/?from=motous для забора файла
+in html mode /out/nag/?from=test для забора файла
 ';
 
         //if ($tpl_mode=='html'){$help_txt = "<pre>$help_txt</pre>";}
-        if ($tpl_mode=='html'){$help_txt = "Hello MOTO!";}
+        if ($tpl_mode=='html'){$help_txt = "Hello!";}
 
         //Установим глобальные метатеги для данной страницы
         Glob::$vars['page_title'] = 'Help'; //Метатег title
@@ -115,7 +115,7 @@ in html mode /out/nag/?from=motous для забора файла
         
         $fileOk = true;
         $refer = (!empty($_GET["from"]))?strtolower($_GET["from"]):''; //Название рефера передается в URL
-        if ($refer!=='motous') {
+        if ($refer!=='test') {
             SysLogs::addError('Error: wrong refer [' . $refer . ']');
             $fileOk = false;
         }
@@ -123,8 +123,8 @@ in html mode /out/nag/?from=motous для забора файла
         $typeDnLoad = (!empty($_GET["dnloadto"]) && $_GET["dnloadto"]==='browser')?'browser':'file'; 
         
         //Откроем файл, откуда будем выгружать
-        $filename = 'tmp/nag-out.csv';
-        $outputFileName = 'nag-out.csv';
+        $filename = 'tmp/test-out.csv';
+        $outputFileName = 'test-out.csv';
         $contentType = SysBf::mime_content_type($filename);
 
         if (!file_exists($filename)){//Если файл не существует, то
@@ -159,7 +159,7 @@ in html mode /out/nag/?from=motous для забора файла
     }
 
     /**
-     * Парсинг сайта nag
+     * Парсинг сайта 
      * @param string $tpl_mode - формат вывода
      * @param bool $console - если true, то вывод в консоль
      */
@@ -167,9 +167,9 @@ in html mode /out/nag/?from=motous для забора файла
         
         require_once (USER_MODULESPATH . 'parser/model/ParserBf.class.php');  
         require_once (USER_MODULESPATH . 'parser/model/ParserPg.class.php'); 
-        require_once (USER_MODULESPATH . 'parser/model/NagObj.class.php'); 
-        require_once (USER_MODULESPATH . 'parser/model/NagObj2.class.php'); 
-        require_once (USER_MODULESPATH . 'parser/model/NagObjList.class.php'); 
+        require_once (USER_MODULESPATH . 'parser/model/TestObj.class.php'); 
+        require_once (USER_MODULESPATH . 'parser/model/TestObj2.class.php'); 
+        require_once (USER_MODULESPATH . 'parser/model/TestObjList.class.php'); 
 
         $item = array('page_content'=>''); //Массив данных, передаваемых во View
 
@@ -180,65 +180,63 @@ in html mode /out/nag/?from=motous для забора файла
         }
 
         //Установим глобальные метатеги для данной страницы
-        Glob::$vars['page_title'] = 'Nag parser'; //Метатег title
+        Glob::$vars['page_title'] = 'Test parser'; //Метатег title
         Glob::$vars['page_keywords'] = ''; //Метатег keywords
         Glob::$vars['page_description'] = 'Run script'; //Метатег description
-        Glob::$vars['page_h1'] = 'Nag parser'; //Содержание основного заголовка страницы
+        Glob::$vars['page_h1'] = 'Test parser'; //Содержание основного заголовка страницы
         
         $csvDelim = ';';
 
         if ($continueOk){ //Можем нормально работать
             $tpl_mode = 'txt';
-            echo "Run Nag parser\n";
+            echo "Run Test parser\n";
 
             //Получи файл со списком артикулов и URL
-            //$srcPg = new ParserPg('https://old-shop.nag.ru/search?word=cisco&count=0');
-            $srcPg = new ParserPg('https://shop.nag.ru/search?count=500&in_stock=&page=1&search=cisco&show=all&sort=score_desc');
+            $srcPg = new ParserPg('https://shop.test-site.ru/search?count=500&in_stock=&page=1&search=cisco&show=all&sort=score_desc');
             echo "Status Code:" . $srcPg->status . "\n" ;
             $result = '';
             if ($srcPg->status!==200){
                 echo $result = 'Error: Status Code:' . $srcPg->status . "\n";
             }else{
-                $nagObjList = new NagObjList($srcPg->content);
-                echo "Found items:".count($nagObjList->list)."\n";
-                $result = date('c') . "\n" . implode($csvDelim, NagObj::getStru()) . "\n";
+                $objList = new TestObjList($srcPg->content);
+                echo "Found items:".count($objList->list)."\n";
+                $result = date('c') . "\n" . implode($csvDelim, TestObj::getStru()) . "\n";
                 SysBf::saveFile('tmp/nag-out.csv',$result);
                 $counter = 0;
-                foreach ($nagObjList->list as $itemContent) {
+                foreach ($objList->list as $itemContent) {
                     $counter++;
                     sleep(1);
-                    $nagObj = new NagObj($itemContent);
+                    $parsObj = new TestObj($itemContent);
                     $resultStr = ''; //implode($csvDelim, $nagObj->data);
                     
-                    $articul = (!empty($nagObj->data['articul']))?$nagObj->data['articul']:'';
-                    $articul = trim(preg_replace("/cisco/i","",$nagObj->data['articul']));
+                    $articul = (!empty($nagObj->data['articul']))?$parsObj->data['articul']:'';
+                    $articul = trim(preg_replace("/cisco/i","",$parsObj->data['articul']));
                     $articul2 = preg_replace("/\([^\)]*\)/","",$articul);
                     $articul2 = strtolower(preg_replace("/[^A-Za-zА-Яа-я0-9]/i","",$articul2));
                     $resultStr .= $articul . $csvDelim . $articul2;
-                    $resultStr .= $csvDelim . ((!empty($nagObj->data['original_id']))?$nagObj->data['original_id']:'');
-                    $resultStr .= $csvDelim . ((!empty($nagObj->data['price_rub']))?$nagObj->data['price_rub']:'');
-                    $resultStr .= $csvDelim . ((!empty($nagObj->data['price_usd']))?$nagObj->data['price_usd']:'');
+                    $resultStr .= $csvDelim . ((!empty($parsObj->data['original_id']))?$parsObj->data['original_id']:'');
+                    $resultStr .= $csvDelim . ((!empty($parsObj->data['price_rub']))?$parsObj->data['price_rub']:'');
+                    $resultStr .= $csvDelim . ((!empty($parsObj->data['price_usd']))?$parsObj->data['price_usd']:'');
 
                     //Доберем данные по отдельному объекту
                     if (!empty($nagObj->data['url'])){
                         $srcPg2 = new ParserPg($nagObj->data['url']);
-                        $nagObj2 = new NagObj2($srcPg2->content);
-                        $resultStr .= $csvDelim . ((!empty($nagObj2->data['price_rub1']))?$nagObj2->data['price_rub1']:'');
-                        $resultStr .= $csvDelim . ((!empty($nagObj2->data['price_usd1']))?$nagObj2->data['price_usd1']:'');
-                        $resultStr .= $csvDelim . ((!empty($nagObj2->data['price_rub2']))?$nagObj2->data['price_rub2']:'');
-                        $resultStr .= $csvDelim . ((!empty($nagObj2->data['price_usd2']))?$nagObj2->data['price_usd2']:'');
-                        $resultStr .= $csvDelim . ((!empty($nagObj2->data['price_rub3']))?$nagObj2->data['price_rub3']:'');
-                        $resultStr .= $csvDelim . ((!empty($nagObj2->data['price_usd3']))?$nagObj2->data['price_usd3']:'');
-                        //print_r($nagObj2->data)."\n\n";
+                        $parsObj2 = new TestObj2($srcPg2->content);
+                        $resultStr .= $csvDelim . ((!empty($parsObj2->data['price_rub1']))?$parsObj2->data['price_rub1']:'');
+                        $resultStr .= $csvDelim . ((!empty($parsObj2->data['price_usd1']))?$parsObj2->data['price_usd1']:'');
+                        $resultStr .= $csvDelim . ((!empty($parsObj2->data['price_rub2']))?$parsObj2->data['price_rub2']:'');
+                        $resultStr .= $csvDelim . ((!empty($parsObj2->data['price_usd2']))?$parsObj2->data['price_usd2']:'');
+                        $resultStr .= $csvDelim . ((!empty($parsObj2->data['price_rub3']))?$parsObj2->data['price_rub3']:'');
+                        $resultStr .= $csvDelim . ((!empty($parsObj2->data['price_usd3']))?$parsObj2->data['price_usd3']:'');
                     }else{
                         $resultStr .= $csvDelim.$csvDelim.$csvDelim;
                     }
                     
-                    $resultStr .= $csvDelim . ((!empty($nagObj->data['instock']))?$nagObj->data['instock']:'');
-                    $resultStr .= $csvDelim . ((!empty($nagObj->data['url']))?$nagObj->data['url']:'');
+                    $resultStr .= $csvDelim . ((!empty($parsObj->data['instock']))?$parsObj->data['instock']:'');
+                    $resultStr .= $csvDelim . ((!empty($parsObj->data['url']))?$parsObj->data['url']:'');
                     
                     $resultStr .= "\n";
-                    SysBf::saveFile('tmp/nag-out.csv',SysBf::utw($resultStr),'a');
+                    SysBf::saveFile('tmp/test-out.csv',SysBf::utw($resultStr),'a');
                     //$result .= $resultStr;
                     
                     if (0===$counter%10) echo "$counter\n";

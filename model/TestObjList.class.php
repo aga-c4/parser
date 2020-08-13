@@ -6,7 +6,7 @@
  * Time: 11:59
  */
 
-class NagObjList {
+class TestObjList {
 
     /**
      * @var array массив, содержащий данные по списку объектов типа: {"url":'',"name":'',...}. Обязательный эелемент "url"
