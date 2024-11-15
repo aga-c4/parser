@@ -66,7 +66,7 @@ class TestObj {
     <h2 class="blue item_name"><a
                 href="';
         $end_text = '"';  
-        $this->data['url'] = 'https://old-shop.nag.ru' . ParserBf::text_between($content, $start_text, $end_text);
+        $this->data['url'] = 'https://test.domain' . ParserBf::text_between($content, $start_text, $end_text);
         
     }
 
